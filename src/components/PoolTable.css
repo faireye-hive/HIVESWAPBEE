@@ -1,0 +1,46 @@
+.pool-row {
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.pool-row:hover td {
+    background: rgba(245, 166, 35, 0.03) !important;
+}
+
+.pair-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pair-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.pair-creator {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.number {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.unit {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.row-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.pool-count {
+    display: flex;
+    align-items: center;
+}

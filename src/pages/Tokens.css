@@ -1,0 +1,18 @@
+.tokens-page {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.search-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+    .search-container {
+        width: 100%;
+        margin-top: 1rem;
+    }
+    .search-container .input {
+        width: 100% !important;
+    }
+}

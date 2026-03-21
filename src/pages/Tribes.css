@@ -1,0 +1,69 @@
+.tribes-page {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.tribes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.tribe-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tribe-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    border-color: rgba(245, 166, 35, 0.3);
+}
+
+.tribe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tribe-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--text-primary);
+}
+
+.tribe-tag {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    background: rgba(245, 166, 35, 0.1);
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-full);
+}
+
+.tribe-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
