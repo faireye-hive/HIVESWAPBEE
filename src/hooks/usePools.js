@@ -3,43 +3,38 @@ import { findPools, findPool, findLiquidityPositions, findUserPositions, getToke
 
 const TRIBALDEX_API = 'https://info-api.tribaldex.com/pools';
 
-// ── Distribution cache (module-level, 5 min TTL) ────────────────────────
+// ── Module-level caches ───────────────────────────────────────────────────
+// Tribaldex: keyed by days, 12-minute TTL — avoids hammering their API
+const VOLUME_TTL = 12 * 60 * 1000;
+const _volumeCache = {}; // { [days]: { data: {volumeMap, tokenPriceMap}, ts } }
+
+// Distribution: 10-minute TTL
+const DISTRO_TTL = 10 * 60 * 1000;
 let _distroCache = { data: null, ts: 0 };
-const DISTRO_TTL = 5 * 60 * 1000;
 
-// ── Helpers ───────────────────────────────────────────────────────────────
+// User positions: 3-minute TTL (lighter, per-user)
+const USER_POS_TTL = 3 * 60 * 1000;
+const _userPosCache = {}; // { [account]: { data: [], ts } }
 
+// ── calcDistroStats (exported for use in PoolTable/PoolDetailModal) ────────
 /**
  * Calculate distribution stats for a pool's active batches.
- * Based on Hive-Engine data analysis: distributions tick ~once per 24h.
- *
- * @param {Array}  batches       – active distribution batches for this pool
- * @param {Object} tokenPriceMap – symbol → USD price
- * @param {number} liquidityUSD  – pool liquidity in USD (from tribaldex)
- * @returns {{ dailyUSD, annualUSD, apr, dailyByToken }}
+ * ~1 tick per 24h based on lastTickTime analysis.
  */
 export function calcDistroStats(batches, tokenPriceMap, liquidityUSD) {
-    const TICKS_PER_DAY = 1; // confirmed ~1 tick/24h from lastTickTime analysis
-
+    const TICKS_PER_DAY = 1;
     let dailyUSD = 0;
-    const dailyByToken = {}; // symbol → qty per day
+    const dailyByToken = {};
 
     for (const batch of batches || []) {
         const ticksLeft = parseInt(batch.numTicksLeft) || 0;
         if (ticksLeft <= 0) continue;
-
         for (const tb of batch.tokenBalances || []) {
             const price = tokenPriceMap?.[tb.symbol] ?? 0;
             const totalQty = parseFloat(tb.quantity) || 0;
-            // Remaining balance spread over remaining ticks
-            const qtyPerTick = totalQty / ticksLeft;
-
-            const dailyQty = qtyPerTick * TICKS_PER_DAY;
+            const dailyQty = (totalQty / ticksLeft) * TICKS_PER_DAY;
             dailyByToken[tb.symbol] = (dailyByToken[tb.symbol] || 0) + dailyQty;
-
-            if (price > 0) {
-                dailyUSD += dailyQty * price;
-            }
+            if (price > 0) dailyUSD += dailyQty * price;
         }
     }
 
@@ -51,28 +46,33 @@ export function calcDistroStats(batches, tokenPriceMap, liquidityUSD) {
     return { dailyUSD, annualUSD, apr, dailyByToken };
 }
 
-// ── Tribaldex fetch (volume + token prices) ─────────────────────────────
-
+// ── Tribaldex fetch (with per-days cache) ─────────────────────────────────
 async function fetchVolumeData(days) {
+    const now = Date.now();
+    const cached = _volumeCache[days];
+    if (cached && now - cached.ts < VOLUME_TTL) {
+        console.info(`[HiveSwapBee] tribaldex cache hit (${days}d)`);
+        return cached.data;
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
 
     try {
         const res = await fetch(`${TRIBALDEX_API}?days=${days}`, { signal: controller.signal });
         clearTimeout(timer);
-        if (!res.ok) { console.warn(`[HiveSwapBee] tribaldex ${res.status}`); return null; }
+        if (!res.ok) { console.warn(`[HiveSwapBee] tribaldex HTTP ${res.status}`); return cached?.data || null; }
 
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) return null;
+        const raw = await res.json();
+        if (!Array.isArray(raw) || raw.length === 0) return cached?.data || null;
 
         const volumeMap = {};
         const tokenPriceMap = {};
 
-        for (const item of data) {
+        for (const item of raw) {
             const pair = item.pair ?? item.tokenPair ?? item.token_pair ?? null;
             if (!pair) continue;
 
-            // Token prices (basePriceUSD / quotePriceUSD from tribaldex)
             const [base, quote] = pair.split(':');
             if (base && item.basePriceUSD) tokenPriceMap[base] = parseFloat(item.basePriceUSD);
             if (quote && item.quotePriceUSD) tokenPriceMap[quote] = parseFloat(item.quotePriceUSD);
@@ -85,18 +85,21 @@ async function fetchVolumeData(days) {
             volumeMap[pair] = { volumeUSD, feeUSD, liquidityUSD, apr };
         }
 
-        if (!Object.keys(volumeMap).length) return null;
-        console.info(`[HiveSwapBee] tribaldex: ${Object.keys(volumeMap).length} pools, ${Object.keys(tokenPriceMap).length} prices (${days}d)`);
-        return { volumeMap, tokenPriceMap };
+        if (!Object.keys(volumeMap).length) return cached?.data || null;
+
+        const data = { volumeMap, tokenPriceMap };
+        _volumeCache[days] = { data, ts: now };
+        console.info(`[HiveSwapBee] tribaldex fetched: ${Object.keys(volumeMap).length} pools, ${Object.keys(tokenPriceMap).length} prices (${days}d)`);
+        return data;
     } catch (err) {
         clearTimeout(timer);
         console.warn('[HiveSwapBee] tribaldex fetch failed:', err.message);
-        return null;
+        // Return stale cache if available rather than nothing
+        return cached?.data || null;
     }
 }
 
 // ── Distribution fetch (with cache) ──────────────────────────────────────
-
 async function fetchDistros() {
     const now = Date.now();
     if (_distroCache.data && now - _distroCache.ts < DISTRO_TTL) {
@@ -119,8 +122,30 @@ async function fetchDistros() {
     }
 }
 
-// ── usePools hook ─────────────────────────────────────────────────────────
+// ── User positions fetch (with cache) ────────────────────────────────────
+/**
+ * Exported so PoolTable can call it directly.
+ * Returns array of position objects: { tokenPair, shares, account }
+ */
+export async function fetchUserPositionsCached(account) {
+    if (!account) return [];
+    const now = Date.now();
+    const cached = _userPosCache[account];
+    if (cached && now - cached.ts < USER_POS_TTL) {
+        console.info(`[HiveSwapBee] user positions cache hit (@${account})`);
+        return cached.data;
+    }
+    try {
+        const data = await findUserPositions(account);
+        _userPosCache[account] = { data: data || [], ts: now };
+        return data || [];
+    } catch (err) {
+        console.warn(`[HiveSwapBee] user positions fetch failed:`, err.message);
+        return cached?.data || [];
+    }
+}
 
+// ── usePools hook ─────────────────────────────────────────────────────────
 export function usePools() {
     const [pools, setPools] = useState([]);
     const [tokenMap, setTokenMap] = useState({});
@@ -136,11 +161,9 @@ export function usePools() {
 
     const poolsLoadedRef = useRef(false);
 
-    // ── Pool fetch ───────────────────────────────────────────────────────
     const fetchPools = useCallback(async () => {
         try {
-            setLoading(true);
-            setError(null);
+            setLoading(true); setError(null);
             const rawPools = await findPools(1000, 0);
             if (!rawPools) { setPools([]); return; }
 
@@ -152,7 +175,6 @@ export function usePools() {
             const tokensArr = await getTokenInfoBatch([...symbols]);
             const tMap = {};
             if (tokensArr) for (const t of tokensArr) tMap[t.symbol] = t;
-
             setTokenMap(tMap);
             setPools(rawPools);
             poolsLoadedRef.current = true;
@@ -163,7 +185,6 @@ export function usePools() {
         }
     }, []);
 
-    // ── Volume + prices fetch ────────────────────────────────────────────
     const fetchVolume = useCallback(async (days) => {
         setVolumeSource('loading');
         const result = await fetchVolumeData(days);
@@ -178,7 +199,6 @@ export function usePools() {
         }
     }, []);
 
-    // ── Distribution fetch ───────────────────────────────────────────────
     const fetchDistributions = useCallback(async () => {
         const map = await fetchDistros();
         setDistroMap(map || {});
@@ -189,8 +209,9 @@ export function usePools() {
 
     const refetch = useCallback(() => {
         fetchPools();
+        // Force cache clear for current period only
+        delete _volumeCache[volumeDays];
         fetchVolume(volumeDays);
-        // Force distro re-fetch by clearing cache
         _distroCache = { data: null, ts: 0 };
         fetchDistributions();
     }, [fetchPools, fetchVolume, fetchDistributions, volumeDays]);
@@ -205,7 +226,6 @@ export function usePools() {
 }
 
 // ── usePoolDetail ─────────────────────────────────────────────────────────
-
 export function usePoolDetail(tokenPair) {
     const [pool, setPool] = useState(null);
     const [positions, setPositions] = useState([]);
@@ -234,7 +254,6 @@ export function usePoolDetail(tokenPair) {
 }
 
 // ── useUserPositions ──────────────────────────────────────────────────────
-
 export function useUserPositions(account) {
     const [positions, setPositions] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -242,7 +261,7 @@ export function useUserPositions(account) {
     useEffect(() => {
         if (!account) { setPositions([]); return; }
         setLoading(true);
-        findUserPositions(account)
+        fetchUserPositionsCached(account)
             .then((d) => setPositions(d || []))
             .catch(() => setPositions([]))
             .finally(() => setLoading(false));

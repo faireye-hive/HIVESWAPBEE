@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TokenIcon from './TokenIcon.jsx';
 import Modal from './Modal.jsx';
 import PoolDetailModal from './PoolDetailModal.jsx';
-import { calcDistroStats } from '../hooks/usePools.js';
+import { calcDistroStats, fetchUserPositionsCached } from '../hooks/usePools.js';
 import './PoolTable.css';
 
 // ── Formatters ────────────────────────────────────────────────────────────
@@ -207,6 +207,45 @@ export default function PoolTable({
     const [selectedPool, setSelectedPool] = useState(null);  // modal
     const [expandedPool, setExpandedPool] = useState(null);  // inline expand
 
+    // ── User filter ──────────────────────────────────────────────────────
+    const [userFilter, setUserFilter] = useState('');
+    // Map of tokenPair → { shares, account } for the filtered user
+    const [userPositionMap, setUserPositionMap] = useState(null);
+    const [userFilterState, setUserFilterState] = useState('idle'); // 'idle'|'loading'|'found'|'empty'|'error'
+    const debounceRef = useRef(null);
+
+    useEffect(() => {
+        const name = userFilter.trim().replace(/^@/, '').toLowerCase();
+        if (!name) {
+            setUserPositionMap(null);
+            setUserFilterState('idle');
+            return;
+        }
+        setUserFilterState('loading');
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(async () => {
+            try {
+                // Uses module-level cache (3min TTL) — no repeated RPC calls
+                const positions = await fetchUserPositionsCached(name);
+                if (!positions || positions.length === 0) {
+                    setUserPositionMap(new Map());
+                    setUserFilterState('empty');
+                } else {
+                    const map = new Map();
+                    for (const p of positions) {
+                        map.set(p.tokenPair, p);
+                    }
+                    setUserPositionMap(map);
+                    setUserFilterState('found');
+                }
+            } catch {
+                setUserPositionMap(null);
+                setUserFilterState('error');
+            }
+        }, 600);
+        return () => clearTimeout(debounceRef.current);
+    }, [userFilter]);
+
     const hasLiveData = volumeSource === 'tribaldex' && volumeMap;
     const colSpan = hasLiveData ? 7 : 6;
 
@@ -237,6 +276,10 @@ export default function PoolTable({
             const q = search.toLowerCase();
             list = list.filter((p) => p.tokenPair.toLowerCase().includes(q));
         }
+        // Filter by user positions if a username is active
+        if (userPositionMap !== null) {
+            list = list.filter((p) => userPositionMap.has(p.tokenPair));
+        }
         list = [...list].sort((a, b) => {
             let av = 0, bv = 0;
             if (['volumeUSD', 'feeUSD', 'liquidityUSD', 'apr', 'totalApr'].includes(sortKey)) {
@@ -259,7 +302,7 @@ export default function PoolTable({
         const favs = list.filter((p) => favorites.has(p.tokenPair));
         const rest = list.filter((p) => !favorites.has(p.tokenPair));
         return [...favs, ...rest];
-    }, [pools, search, sortKey, sortDir, volumeMap, favorites, distroMap, tokenPriceMap]);
+    }, [pools, search, sortKey, sortDir, volumeMap, favorites, distroMap, tokenPriceMap, userPositionMap]);
 
     const periodLabel = PERIODS.find((p) => p.days === volumeDays)?.label ?? '';
 
@@ -276,6 +319,27 @@ export default function PoolTable({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
+                </div>
+
+                {/* User filter */}
+                <div className={`search-bar user-filter-bar${userFilterState === 'found' ? ' user-filter-bar--active' : ''}${userFilterState === 'empty' || userFilterState === 'error' ? ' user-filter-bar--warn' : ''}`}>
+                    <span className="search-icon">
+                        {userFilterState === 'loading' ? '⟳' : '👤'}
+                    </span>
+                    <input
+                        type="text"
+                        className="input"
+                        placeholder="Filter by user..."
+                        value={userFilter}
+                        onChange={(e) => setUserFilter(e.target.value)}
+                    />
+                    {userFilter && (
+                        <button
+                            className="user-filter-clear"
+                            onClick={() => setUserFilter('')}
+                            title="Clear user filter"
+                        >✕</button>
+                    )}
                 </div>
                 {setVolumeDays && (
                     <div className="period-selector">
@@ -296,8 +360,25 @@ export default function PoolTable({
                             ★ {favorites.size}
                         </span>
                     )}
+                    {userFilterState === 'found' && userPositionMap && (
+                        <span className="badge" style={{ marginLeft: 6, background: 'rgba(99,179,237,0.15)', color: '#63b3ed' }}>
+                            👤 @{userFilter.replace(/^@/, '')}
+                        </span>
+                    )}
                 </div>
             </div>
+
+            {/* User filter status messages */}
+            {userFilterState === 'empty' && userFilter && (
+                <div className="volume-fallback-notice">
+                    👤 No pools found for <strong>@{userFilter.replace(/^@/, '')}</strong> — they may not have any active LP positions.
+                </div>
+            )}
+            {userFilterState === 'error' && (
+                <div className="volume-fallback-notice">
+                    ⚠ Could not fetch positions for <strong>@{userFilter.replace(/^@/, '')}</strong>. Check the username and try again.
+                </div>
+            )}
 
             {volumeSource === 'fallback' && (
                 <div className="volume-fallback-notice">
@@ -386,6 +467,24 @@ export default function PoolTable({
                                                             1 {quote} = <strong>{fmtPrice(quotePrice)}</strong> {base}
                                                         </span>
                                                     </div>
+                                                    {/* User position — shown when filter active, uses only cached data */}
+                                                    {userPositionMap && (() => {
+                                                        const pos = userPositionMap.get(pool.tokenPair);
+                                                        if (!pos) return null;
+                                                        const shares = parseFloat(pos.shares) || 0;
+                                                        const totalShares = parseFloat(pool.totalShares) || 1;
+                                                        const pct = (shares / totalShares) * 100;
+                                                        const estBase = (shares / totalShares) * parseFloat(pool.baseQuantity);
+                                                        const estQuote = (shares / totalShares) * parseFloat(pool.quoteQuantity);
+                                                        return (
+                                                            <div className="user-pos-row">
+                                                                <span className="user-pos-badge">👤 {pct.toFixed(3)}%</span>
+                                                                <span className="user-pos-item">{fmtN(estBase, 4)} {base}</span>
+                                                                <span className="user-pos-sep">+</span>
+                                                                <span className="user-pos-item">{fmtN(estQuote, 4)} {quote}</span>
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
                                         </td>
