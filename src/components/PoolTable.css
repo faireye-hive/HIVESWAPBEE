@@ -151,14 +151,277 @@
     font-size: 0.82rem;
 }
 
+/* ── Distribution badge (inline in pool name) ───────────────────────────── */
+
+.distro-badge {
+    font-size: 0.75rem;
+    cursor: default;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+}
+
+.distro-badge:hover {
+    opacity: 1;
+}
+
+.distro-badge--lg {
+    font-size: 0.78rem;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    color: #22c55e;
+    font-weight: 600;
+}
+
+/* ── APR stacked cell ───────────────────────────────────────────────────── */
+
+.apr-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+}
+
+.apr-total {
+    font-weight: 700;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.apr-breakdown {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.apr-distro {
+    color: #22c55e !important;
+}
+
+/* ── Inline price under pair name ───────────────────────────────────────── */
+
+.pair-prices {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.pair-price-item {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.pair-price-item strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.pair-price-sep {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* ── Expand caret ───────────────────────────────────────────────────────── */
+
+.expand-caret {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-left: 2px;
+    transition: opacity 0.15s;
+}
+
+.pool-row:hover .expand-caret {
+    opacity: 1;
+}
+
+.pool-row--expanded .expand-caret {
+    opacity: 1;
+    color: var(--accent);
+}
+
+/* ── Expanded row ───────────────────────────────────────────────────────── */
+
+.pool-row--expanded td {
+    border-bottom: none !important;
+}
+
+.pool-expand-row {
+    background: rgba(245, 166, 35, 0.02);
+}
+
+.pool-expand-cell {
+    padding: 0 0 10px 0 !important;
+    border-top: none !important;
+}
+
+.pool-expand-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 10px 12px 4px 48px;
+    /* indent under pair icons */
+    border-top: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+/* ── Group inside expand ── */
+.pep-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 24px 8px 0;
+    min-width: 200px;
+}
+
+.pep-group+.pep-group {
+    padding-left: 24px;
+    border-left: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.pep-group-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+/* Prices */
+.pep-prices,
+.pep-reserves {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.pep-price-item,
+.pep-reserve-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+}
+
+.pep-price-label,
+.pep-reserve-sym {
+    color: var(--text-secondary);
+    font-weight: 500;
+    min-width: 52px;
+}
+
+.pep-price-eq {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+.pep-price-value,
+.pep-reserve-qty {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+}
+
+.pep-price-usd {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-left: 2px;
+}
+
+/* Rewards */
+.pep-rewards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.pep-reward-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-size: 0.75rem;
+}
+
+.pep-reward-sym {
+    font-weight: 700;
+    color: #22c55e;
+}
+
+.pep-reward-qty {
+    color: var(--text-secondary);
+}
+
+.pep-reward-usd {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+}
+
+.pep-reward-total {
+    width: 100%;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding-top: 2px;
+}
+
+/* ── Distribution badge ─────────────────────────────────────────────────── */
+
+.distro-badge {
+    font-size: 0.75rem;
+    cursor: default;
+}
+
+.distro-badge--lg {
+    font-size: 0.78rem;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    color: #22c55e;
+    font-weight: 600;
+}
+
+/* ── APR stacked ────────────────────────────────────────────────────────── */
+
+.apr-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+}
+
+.apr-total {
+    font-weight: 700;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.apr-breakdown {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.apr-distro {
+    color: #22c55e !important;
+}
+
 /* ── Pool Detail Modal ──────────────────────────────────────────────────── */
 
-/* Simple block — no flex magic, content just flows and modal-body scrolls */
 .pdm {
     font-size: 0.875rem;
 }
 
-/* ── Header ── */
 .pdm-header {
     display: flex;
     align-items: center;
@@ -193,7 +456,6 @@
     flex-shrink: 0;
 }
 
-/* ── Stat pills ── */
 .pdm-pills {
     display: flex;
     flex-wrap: wrap;
@@ -216,6 +478,16 @@
     background: rgba(245, 166, 35, 0.06);
 }
 
+.pdm-pill--user {
+    border-color: rgba(245, 166, 35, 0.3);
+    background: rgba(245, 166, 35, 0.06);
+}
+
+.pdm-pill--distro {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.06);
+}
+
 .pdm-pill-label {
     font-size: 0.67rem;
     color: var(--text-muted);
@@ -232,7 +504,91 @@
     white-space: nowrap;
 }
 
-/* ── LP section ── */
+.pdm-distro-section {
+    margin-bottom: 20px;
+}
+
+.pdm-distro-daily {
+    font-size: 0.72rem;
+    color: #22c55e;
+    font-weight: 500;
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.pdm-distro-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+.pdm-distro-card {
+    background: rgba(34, 197, 94, 0.04);
+    border: 1px solid rgba(34, 197, 94, 0.18);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+
+.pdm-distro-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.pdm-distro-creator {
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
+.pdm-distro-ticks {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.pdm-distro-usd {
+    font-size: 0.75rem;
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.pdm-distro-tokens {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pdm-distro-token {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+}
+
+.pdm-distro-symbol {
+    font-weight: 700;
+    min-width: 72px;
+    color: var(--text-primary);
+}
+
+.pdm-distro-qty {
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.pdm-distro-usd-small {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    margin-left: auto;
+}
+
+.pdm-lp-section {
+    margin-bottom: 0;
+}
+
 .pdm-lp-title {
     font-size: 0.78rem;
     font-weight: 700;
@@ -243,6 +599,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .pdm-lp-count {
@@ -265,7 +622,6 @@
     width: 100%;
 }
 
-/* error */
 .pdm-error {
     color: var(--red);
     padding: 24px;

@@ -5,21 +5,16 @@ import './Pools.css';
 
 export default function Pools() {
     const {
-        pools,
-        tokenMap,
-        volumeMap,
-        volumeDays,
-        setVolumeDays,
-        volumeSource,
-        loading,
-        error,
-        refetch,
+        pools, tokenMap,
+        volumeMap, volumeDays, setVolumeDays, volumeSource,
+        tokenPriceMap,
+        distroMap,
+        loading, error, refetch,
     } = usePools();
 
     return (
         <div className="page">
             <div className="container">
-                {/* Hero section */}
                 <div className="hero-section">
                     <div className="hero-content">
                         <h1 className="hero-title">
@@ -30,8 +25,6 @@ export default function Pools() {
                             Explore all liquidity pools, swap tokens, and provide liquidity on the Hive-Engine DEX.
                         </p>
                     </div>
-
-                    {/* Stats overview */}
                     {!loading && pools.length > 0 && (
                         <div className="stats-grid hero-stats">
                             <div className="stat-card glass">
@@ -41,6 +34,10 @@ export default function Pools() {
                             <div className="stat-card glass">
                                 <div className="stat-label">Unique Tokens</div>
                                 <div className="stat-value accent">{Object.keys(tokenMap).length}</div>
+                            </div>
+                            <div className="stat-card glass">
+                                <div className="stat-label">Active Incentives</div>
+                                <div className="stat-value accent">{Object.keys(distroMap).length}</div>
                             </div>
                             <div className="stat-card glass">
                                 <div className="stat-label">Top Pool</div>
@@ -56,17 +53,13 @@ export default function Pools() {
                     )}
                 </div>
 
-                {/* Error */}
                 {error && (
                     <div className="card" style={{ marginBottom: 20, borderColor: 'rgba(255,107,107,0.3)' }}>
                         <p style={{ color: 'var(--red)' }}>⚠ Failed to load pools: {error}</p>
-                        <button className="btn btn-secondary btn-sm" onClick={refetch} style={{ marginTop: 10 }}>
-                            Retry
-                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={refetch} style={{ marginTop: 10 }}>Retry</button>
                     </div>
                 )}
 
-                {/* Loading */}
                 {loading ? (
                     <div>
                         <div className="skeleton" style={{ height: 60, marginBottom: 16 }} />
@@ -82,6 +75,8 @@ export default function Pools() {
                         volumeDays={volumeDays}
                         setVolumeDays={setVolumeDays}
                         volumeSource={volumeSource}
+                        tokenPriceMap={tokenPriceMap}
+                        distroMap={distroMap}
                     />
                 )}
             </div>
