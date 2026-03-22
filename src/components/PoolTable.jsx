@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TokenIcon from './TokenIcon.jsx';
+import Modal from './Modal.jsx';
+import PoolDetailModal from './PoolDetailModal.jsx';
 import './PoolTable.css';
 
 // ── Formatters ────────────────────────────────────────────────────────────
@@ -80,6 +82,7 @@ export default function PoolTable({
     const [sortKey, setSortKey] = useState('volumeUSD');
     const [sortDir, setSortDir] = useState('desc');
     const [favorites, setFavorites] = useState(loadFavorites);
+    const [selectedPool, setSelectedPool] = useState(null); // tokenPair for detail modal
 
     const hasLiveData = volumeSource === 'tribaldex' && volumeMap;
 
@@ -316,7 +319,8 @@ export default function PoolTable({
                                                 </button>
                                                 <button
                                                     className="btn btn-secondary btn-sm"
-                                                    onClick={() => navigate(`/pool/${encodeURIComponent(pool.tokenPair)}`)}
+                                                    title="Quick details"
+                                                    onClick={() => setSelectedPool(pool.tokenPair)}
                                                 >
                                                     ↗
                                                 </button>
@@ -329,6 +333,23 @@ export default function PoolTable({
                     </tbody>
                 </table>
             </div>
+
+            {/* Pool detail modal */}
+            <Modal
+                isOpen={!!selectedPool}
+                onClose={() => setSelectedPool(null)}
+                title=""
+                size="full"
+            >
+                {selectedPool && (
+                    <PoolDetailModal
+                        tokenPair={selectedPool}
+                        onClose={() => setSelectedPool(null)}
+                        stats={volumeMap?.[selectedPool] ?? null}
+                        volumeDays={volumeDays}
+                    />
+                )}
+            </Modal>
         </div>
     );
 }

@@ -1,0 +1,141 @@
+/* ── Overlay ─────────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 40px;
+    animation: overlayIn 0.2s ease;
+}
+
+@keyframes overlayIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ── Modal box — flex column, clips overflow so body can scroll ── */
+.modal-content {
+    position: relative;
+    background: var(--bg-card, #1a1a2e);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: calc(100vh - 80px);
+    animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    /* clips; body handles scroll */
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ── Size variants ── */
+.modal-sm {
+    max-width: 420px;
+}
+
+.modal-md {
+    max-width: 560px;
+}
+
+.modal-lg {
+    max-width: 760px;
+}
+
+.modal-xl {
+    max-width: 1000px;
+}
+
+/* .modal-full — width/height set via inline style in Modal.jsx */
+
+/* ── Header ── */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    flex-shrink: 0;
+    /* never shrinks — always visible */
+    gap: 12px;
+}
+
+.modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ── Close button ── */
+.modal-close {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding: 5px 10px;
+    border-radius: 7px;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: var(--text-primary);
+}
+
+/* ── Body — THIS is the scroll container ── */
+.modal-body {
+    flex: 1;
+    /* takes all remaining height after header */
+    min-height: 0;
+    /* required for flex + overflow-y to work */
+    overflow-y: auto;
+    /* THE scroll */
+    padding: 20px 24px 24px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 5px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+
+/* Full modal body — same rules, slightly different padding */
+.modal-full .modal-body {
+    padding: 16px 22px 28px;
+}

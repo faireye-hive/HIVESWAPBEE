@@ -1,3 +1,5 @@
+/* ── Row & pair ─────────────────────────────────────────────────────────── */
+
 .pool-row {
     cursor: pointer;
     transition: background var(--transition);
@@ -24,6 +26,14 @@
     color: var(--text-muted);
 }
 
+.pair-meta {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+/* ── Numbers ────────────────────────────────────────────────────────────── */
+
 .number {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
@@ -35,6 +45,8 @@
     font-weight: 400;
 }
 
+/* ── Toolbar ────────────────────────────────────────────────────────────── */
+
 .row-actions {
     display: flex;
     gap: 6px;
@@ -45,116 +57,14 @@
     align-items: center;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   ADDITIONS to PoolTable.css
-   Paste these rules at the bottom of your existing PoolTable.css
-   ────────────────────────────────────────────────────────────── */
-
-/* Period selector (1D / 3D / 7D / 30D) */
 .period-selector {
     display: flex;
     gap: 4px;
     align-items: center;
 }
 
-/* Favorite button in each row */
-.fav-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1rem;
-    line-height: 1;
-    padding: 4px 6px;
-    border-radius: 6px;
-    color: var(--text-muted, #888);
-    transition: color 0.15s, transform 0.15s;
-}
+/* ── Compact table ──────────────────────────────────────────────────────── */
 
-.fav-btn:hover {
-    color: #ffc800;
-    transform: scale(1.2);
-}
-
-.fav-btn--active {
-    color: #ffc800;
-}
-
-/* Highlighted row for favorites */
-.pool-row--fav {
-    background: rgba(255, 200, 0, 0.04) !important;
-    border-left: 2px solid rgba(255, 200, 0, 0.35);
-}
-
-.pool-row--fav:hover {
-    background: rgba(255, 200, 0, 0.08) !important;
-}
-
-/* ──────────────────────────────────────────────────────────────
-   ADDITIONS to PoolTable.css — paste at the bottom
-   ────────────────────────────────────────────────────────────── */
-
-/* Period selector (1D / 3D / 7D / 30D) */
-.period-selector {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
-/* Favorite button */
-.fav-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1rem;
-    line-height: 1;
-    padding: 4px 6px;
-    border-radius: 6px;
-    color: var(--text-muted, #888);
-    transition: color 0.15s, transform 0.15s;
-}
-
-.fav-btn:hover {
-    color: #ffc800;
-    transform: scale(1.2);
-}
-
-.fav-btn--active {
-    color: #ffc800;
-}
-
-/* Favorite row highlight */
-.pool-row--fav {
-    background: rgba(255, 200, 0, 0.04) !important;
-    border-left: 2px solid rgba(255, 200, 0, 0.35);
-}
-
-.pool-row--fav:hover {
-    background: rgba(255, 200, 0, 0.08) !important;
-}
-
-/* Fallback warning */
-.volume-fallback-notice {
-    margin-bottom: 12px;
-    padding: 8px 14px;
-    border-radius: 8px;
-    background: rgba(255, 180, 0, 0.08);
-    border: 1px solid rgba(255, 180, 0, 0.2);
-    color: var(--text-muted);
-    font-size: 0.82rem;
-}
-
-/* ──────────────────────────────────────────────────────────────
-   ADDITIONS to PoolTable.css — paste at the bottom
-   ────────────────────────────────────────────────────────────── */
-
-/* Period selector */
-.period-selector {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
-/* Compact table overrides */
 .pool-table-compact {
     font-size: 0.84rem;
 }
@@ -165,7 +75,6 @@
     white-space: nowrap;
 }
 
-/* Column width hints */
 .col-fav {
     width: 32px;
     text-align: center;
@@ -190,21 +99,16 @@
     width: 96px;
 }
 
-/* Pool pair — compact two-line layout */
-.pair-meta {
-    font-size: 0.74rem;
-    color: var(--text-muted);
-    margin-top: 1px;
-}
+/* ── APR badge ──────────────────────────────────────────────────────────── */
 
-/* APR badge */
 .apr-badge {
     font-weight: 600;
     font-size: 0.85rem;
     letter-spacing: 0.01em;
 }
 
-/* Favorite button */
+/* ── Favorites ──────────────────────────────────────────────────────────── */
+
 .fav-btn {
     background: none;
     border: none;
@@ -226,7 +130,6 @@
     color: #ffc800;
 }
 
-/* Favorite row highlight */
 .pool-row--fav {
     background: rgba(255, 200, 0, 0.04) !important;
     border-left: 2px solid rgba(255, 200, 0, 0.35);
@@ -236,7 +139,8 @@
     background: rgba(255, 200, 0, 0.08) !important;
 }
 
-/* Fallback warning */
+/* ── Fallback notice ────────────────────────────────────────────────────── */
+
 .volume-fallback-notice {
     margin-bottom: 12px;
     padding: 8px 14px;
@@ -247,8 +151,123 @@
     font-size: 0.82rem;
 }
 
-/* Details button compact */
-.btn-icon {
-    min-width: unset;
-    padding: 4px 8px;
+/* ── Pool Detail Modal ──────────────────────────────────────────────────── */
+
+/* Simple block — no flex magic, content just flows and modal-body scrolls */
+.pdm {
+    font-size: 0.875rem;
+}
+
+/* ── Header ── */
+.pdm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+.pdm-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pdm-pair {
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.pdm-creator {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.pdm-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* ── Stat pills ── */
+.pdm-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.pdm-pill {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 12px;
+    background: var(--bg-input, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.07));
+    border-radius: 8px;
+    min-width: 88px;
+}
+
+.pdm-pill--accent {
+    border-color: rgba(245, 166, 35, 0.3);
+    background: rgba(245, 166, 35, 0.06);
+}
+
+.pdm-pill-label {
+    font-size: 0.67rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+
+.pdm-pill-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── LP section ── */
+.pdm-lp-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pdm-lp-count {
+    background: var(--bg-input, rgba(255, 255, 255, 0.06));
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.pdm-lp-body .table-container {
+    margin: 0;
+    border-radius: 10px;
+}
+
+.pdm-lp-body table {
+    width: 100%;
+}
+
+/* error */
+.pdm-error {
+    color: var(--red);
+    padding: 24px;
+    text-align: center;
 }
