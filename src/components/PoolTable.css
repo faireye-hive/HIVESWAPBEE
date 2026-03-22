@@ -44,3 +44,211 @@
     display: flex;
     align-items: center;
 }
+
+/* ──────────────────────────────────────────────────────────────
+   ADDITIONS to PoolTable.css
+   Paste these rules at the bottom of your existing PoolTable.css
+   ────────────────────────────────────────────────────────────── */
+
+/* Period selector (1D / 3D / 7D / 30D) */
+.period-selector {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+/* Favorite button in each row */
+.fav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 6px;
+    color: var(--text-muted, #888);
+    transition: color 0.15s, transform 0.15s;
+}
+
+.fav-btn:hover {
+    color: #ffc800;
+    transform: scale(1.2);
+}
+
+.fav-btn--active {
+    color: #ffc800;
+}
+
+/* Highlighted row for favorites */
+.pool-row--fav {
+    background: rgba(255, 200, 0, 0.04) !important;
+    border-left: 2px solid rgba(255, 200, 0, 0.35);
+}
+
+.pool-row--fav:hover {
+    background: rgba(255, 200, 0, 0.08) !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   ADDITIONS to PoolTable.css — paste at the bottom
+   ────────────────────────────────────────────────────────────── */
+
+/* Period selector (1D / 3D / 7D / 30D) */
+.period-selector {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+/* Favorite button */
+.fav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 6px;
+    color: var(--text-muted, #888);
+    transition: color 0.15s, transform 0.15s;
+}
+
+.fav-btn:hover {
+    color: #ffc800;
+    transform: scale(1.2);
+}
+
+.fav-btn--active {
+    color: #ffc800;
+}
+
+/* Favorite row highlight */
+.pool-row--fav {
+    background: rgba(255, 200, 0, 0.04) !important;
+    border-left: 2px solid rgba(255, 200, 0, 0.35);
+}
+
+.pool-row--fav:hover {
+    background: rgba(255, 200, 0, 0.08) !important;
+}
+
+/* Fallback warning */
+.volume-fallback-notice {
+    margin-bottom: 12px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: rgba(255, 180, 0, 0.08);
+    border: 1px solid rgba(255, 180, 0, 0.2);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   ADDITIONS to PoolTable.css — paste at the bottom
+   ────────────────────────────────────────────────────────────── */
+
+/* Period selector */
+.period-selector {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+/* Compact table overrides */
+.pool-table-compact {
+    font-size: 0.84rem;
+}
+
+.pool-table-compact td,
+.pool-table-compact th {
+    padding: 8px 10px;
+    white-space: nowrap;
+}
+
+/* Column width hints */
+.col-fav {
+    width: 32px;
+    text-align: center;
+    padding: 0 4px !important;
+}
+
+.col-pool {
+    min-width: 160px;
+}
+
+.col-num {
+    width: 96px;
+    text-align: right;
+}
+
+.col-apr {
+    width: 80px;
+    text-align: right;
+}
+
+.col-actions {
+    width: 96px;
+}
+
+/* Pool pair — compact two-line layout */
+.pair-meta {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+/* APR badge */
+.apr-badge {
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.01em;
+}
+
+/* Favorite button */
+.fav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 3px 5px;
+    border-radius: 5px;
+    color: var(--text-muted, #888);
+    transition: color 0.15s, transform 0.15s;
+}
+
+.fav-btn:hover {
+    color: #ffc800;
+    transform: scale(1.2);
+}
+
+.fav-btn--active {
+    color: #ffc800;
+}
+
+/* Favorite row highlight */
+.pool-row--fav {
+    background: rgba(255, 200, 0, 0.04) !important;
+    border-left: 2px solid rgba(255, 200, 0, 0.35);
+}
+
+.pool-row--fav:hover {
+    background: rgba(255, 200, 0, 0.08) !important;
+}
+
+/* Fallback warning */
+.volume-fallback-notice {
+    margin-bottom: 12px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: rgba(255, 180, 0, 0.08);
+    border: 1px solid rgba(255, 180, 0, 0.2);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+/* Details button compact */
+.btn-icon {
+    min-width: unset;
+    padding: 4px 8px;
+}

@@ -4,7 +4,17 @@ import PoolTable from '../components/PoolTable.jsx';
 import './Pools.css';
 
 export default function Pools() {
-    const { pools, tokenMap, loading, error, refetch } = usePools();
+    const {
+        pools,
+        tokenMap,
+        volumeMap,
+        volumeDays,
+        setVolumeDays,
+        volumeSource,
+        loading,
+        error,
+        refetch,
+    } = usePools();
 
     return (
         <div className="page">
@@ -65,7 +75,14 @@ export default function Pools() {
                         ))}
                     </div>
                 ) : (
-                    <PoolTable pools={pools} tokenMap={tokenMap} />
+                    <PoolTable
+                        pools={pools}
+                        tokenMap={tokenMap}
+                        volumeMap={volumeMap}
+                        volumeDays={volumeDays}
+                        setVolumeDays={setVolumeDays}
+                        volumeSource={volumeSource}
+                    />
                 )}
             </div>
         </div>
