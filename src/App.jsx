@@ -11,6 +11,7 @@ import UserPositions from './pages/UserPositions.jsx';
 import Tokens from './pages/Tokens.jsx';
 import Tribes from './pages/Tribes.jsx';
 import TribePosts from './pages/TribePosts.jsx';
+import UserWallet from './pages/UserWallet.jsx';
 
 export default function App() {
     return (
@@ -26,6 +27,7 @@ export default function App() {
                         <Route path="/tokens" element={<Tokens />} />
                         <Route path="/tribes" element={<Tribes />} />
                         <Route path="/tribes/:tag" element={<TribePosts />} />
+                        <Route path="/wallet" element={<UserWallet />} />
                     </Routes>
                     <Footer />
                 </ToastProvider>
