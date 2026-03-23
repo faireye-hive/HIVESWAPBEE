@@ -131,3 +131,25 @@ export async function getPoolCount() {
 export async function findMetrics(limit = 1000, offset = 0) {
     return sscCall('find', { contract: 'market', table: 'metrics', query: {}, limit, offset });
 }
+/* ── Market metrics (price change) ── */
+// Returns all market metric rows with priceChangePercent, lastPrice, etc.
+export async function getMarketMetrics(limit = 1000, offset = 0) {
+    return sscCall('find', {
+        contract: 'market',
+        table: 'metrics',
+        query: {},
+        limit,
+        offset,
+    });
+}
+
+/* ── Token metadata paginated (for precision, staking info etc) ── */
+export async function getAllTokensMeta(limit = 1000, offset = 0) {
+    return sscCall('find', {
+        contract: 'tokens',
+        table: 'tokens',
+        query: {},
+        limit,
+        offset,
+    });
+}

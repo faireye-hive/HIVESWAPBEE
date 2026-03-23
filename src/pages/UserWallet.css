@@ -95,7 +95,6 @@
     flex-wrap: wrap;
 }
 
-/* Filter chips */
 .uw-filter-chip {
     display: flex;
     align-items: center;
@@ -159,7 +158,7 @@
 }
 
 .uw-col-num {
-    width: 82px;
+    width: 88px;
     text-align: right;
 }
 
@@ -168,11 +167,16 @@
     text-align: right;
 }
 
-.uw-col-actions {
-    width: 148px;
+.uw-col-pct {
+    width: 68px;
+    text-align: right;
 }
 
-/* Star button */
+.uw-col-actions {
+    width: 140px;
+}
+
+/* Star */
 .uw-star-btn {
     background: none;
     border: none;
@@ -190,7 +194,7 @@
     transform: scale(1.2);
 }
 
-/* Favorite row highlight */
+/* Fav row */
 .uw-row--fav {
     background: rgba(255, 200, 0, 0.03) !important;
     border-left: 2px solid rgba(255, 200, 0, 0.3);
@@ -198,6 +202,10 @@
 
 .uw-row--fav:hover td {
     background: rgba(255, 200, 0, 0.05) !important;
+}
+
+.uw-row:hover td {
+    background: rgba(255, 255, 255, 0.02) !important;
 }
 
 /* Token cell */
@@ -236,7 +244,7 @@
     cursor: default;
 }
 
-/* Balance colors */
+/* Colors */
 .uw-zero {
     color: var(--text-muted);
     opacity: 0.35;
@@ -262,6 +270,22 @@
     color: #b794f4;
 }
 
+/* % change */
+.uw-pct {
+    font-weight: 600;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+}
+
+.uw-pct-up {
+    color: #22c55e;
+}
+
+.uw-pct-down {
+    color: #fc8181;
+}
+
 /* USD cell */
 .uw-usd-cell {
     display: flex;
@@ -281,9 +305,67 @@
     color: var(--text-muted);
 }
 
-/* Row hover */
-.uw-row:hover td {
-    background: rgba(255, 255, 255, 0.02) !important;
+/* ── Tooltip ─────────────────────────────────────────────────────────────── */
+
+.uw-tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.uw-has-tooltip {
+    cursor: help;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(255, 255, 255, 0.2);
+}
+
+.uw-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+    background: var(--bg-card, #1a1a2e);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 200;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    min-width: 160px;
+}
+
+.uw-tooltip-wrap:hover .uw-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.uw-tooltip-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.uw-tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.78rem;
+}
+
+.uw-tooltip-row span:first-child {
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.uw-tooltip-row span:last-child {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
 /* ── Action buttons ──────────────────────────────────────────────────────── */
@@ -422,7 +504,7 @@
     font-size: 0.9rem;
 }
 
-/* ── Manage visibility modal ─────────────────────────────────────────────── */
+/* ── Manage modal ────────────────────────────────────────────────────────── */
 
 .uw-manage-modal {
     display: flex;
