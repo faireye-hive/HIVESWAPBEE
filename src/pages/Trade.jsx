@@ -2,9 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Big from 'big.js';
 import TokenIcon from '../components/TokenIcon.jsx';
+import TradeBot from '../components/TradeBot.jsx';
 import { useKeychainContext } from '../context/KeychainContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { notifyWalletRefresh } from '../hooks/useBalances.js';
+import { useEngineTx } from '../hooks/useEngineTx.js';
+import { usePoolBot } from '../hooks/usePoolBot.js';
+import { hivePerToken } from '../lib/tradeBot.js';
 import { floorToPrecision } from '../lib/swapQuote.js';
 import {
     findMetrics,
@@ -108,8 +112,9 @@ export default function Trade() {
     const symbol = rawSymbol.toUpperCase();
     const valid = SYMBOL_RE.test(symbol) && symbol !== 'SWAP.HIVE';
     const navigate = useNavigate();
-    const { user, marketAction } = useKeychainContext();
+    const { user, marketAction, swapTokens } = useKeychainContext();
     const toast = useToast();
+    const { gate, run } = useEngineTx();
 
     const [info, setInfo] = useState(null);
     const [metric, setMetric] = useState(null);
@@ -118,6 +123,7 @@ export default function Trade() {
     const [trades, setTrades] = useState([]);
     const [orders, setOrders] = useState({ buys: [], sells: [] });
     const [balances, setBalances] = useState({ token: null, hive: null });
+    const [pool, setPool] = useState(null);
     const [poolPair, setPoolPair] = useState(null);
     const [picker, setPicker] = useState([]);
     const [query, setQuery] = useState(symbol);
@@ -132,8 +138,18 @@ export default function Trade() {
     const [submitting, setSubmitting] = useState(false);
 
     const precision = info?.precision ?? null;
+    const bot = usePoolBot({
+        symbol,
+        precision,
+        user,
+        pool,
+        marketAction,
+        swapTokens,
+        runTx: run,
+        toast,
+    });
 
-    const refresh = useCallback(async (silent = false) => {
+    const refresh = useCallback(async (silent = false, fresh = false) => {
         if (!valid) {
             setLoading(false);
             return;
@@ -142,15 +158,15 @@ export default function Trade() {
         setError(null);
         try {
             const [sellBook, buyBook, history, token, hiveBal, tokenBal, poolA, poolB, metricRow] = await Promise.all([
-                getSellBook(symbol, 40).catch(() => []),
-                getBuyBook(symbol, 40).catch(() => []),
-                getTradesHistory(symbol, 30).catch(() => []),
+                getSellBook(symbol, 40, fresh).catch(() => []),
+                getBuyBook(symbol, 40, fresh).catch(() => []),
+                getTradesHistory(symbol, 30, fresh).catch(() => []),
                 getTokenInfo(symbol).catch(() => null),
-                user ? getTokenBalance(user, 'SWAP.HIVE').catch(() => null) : Promise.resolve(null),
-                user ? getTokenBalance(user, symbol).catch(() => null) : Promise.resolve(null),
-                findPool(`SWAP.HIVE:${symbol}`).catch(() => null),
-                findPool(`${symbol}:SWAP.HIVE`).catch(() => null),
-                getMarketMetric(symbol).catch(() => null),
+                user ? getTokenBalance(user, 'SWAP.HIVE', fresh).catch(() => null) : Promise.resolve(null),
+                user ? getTokenBalance(user, symbol, fresh).catch(() => null) : Promise.resolve(null),
+                findPool(`SWAP.HIVE:${symbol}`, fresh).catch(() => null),
+                findPool(`${symbol}:SWAP.HIVE`, fresh).catch(() => null),
+                getMarketMetric(symbol, fresh).catch(() => null),
             ]);
             if (!token) {
                 setInfo(null);
@@ -166,11 +182,16 @@ export default function Trade() {
                 hive: hiveBal?.balance ?? (user ? '0' : null),
                 token: tokenBal?.balance ?? (user ? '0' : null),
             });
-            setPoolPair(poolA?.tokenPair || poolB?.tokenPair || null);
+            const nextPool = poolA || poolB || null;
+            setPool(nextPool);
+            setPoolPair(nextPool?.tokenPair || null);
             setMetric(metricRow);
             if (user) {
-                const mine = await getAccountOrders(user, symbol);
-                setOrders(mine);
+                try {
+                    setOrders(await getAccountOrders(user, symbol, fresh));
+                } catch {
+                    /* Keep the orders already on screen when this read fails. */
+                }
             } else {
                 setOrders({ buys: [], sells: [] });
             }
@@ -182,6 +203,7 @@ export default function Trade() {
     }, [symbol, user, valid]);
 
     useEffect(() => {
+        setPool(null);
         setQuery(symbol);
         setPrice('');
         setQuantity('');
@@ -214,6 +236,7 @@ export default function Trade() {
     const maxBid = Math.max(1, ...bidLevels.map((l) => l.quantity));
     const bestAsk = askLevels[0]?.price;
     const bestBid = bidLevels[0]?.price;
+    const poolPrice = hivePerToken(pool, symbol);
     const spread = bestAsk && bestBid ? (parseFloat(bestAsk) - parseFloat(bestBid)) : null;
     const mid = bestAsk && bestBid ? (parseFloat(bestAsk) + parseFloat(bestBid)) / 2 : null;
 
@@ -279,24 +302,26 @@ export default function Trade() {
         }
         setSubmitting(true);
         try {
-            if (mode === 'limit') {
-                if (!priceStr || !qtyStr) throw new Error('Enter a price and a quantity');
-                await marketAction(side === 'buy' ? 'buy' : 'sell', {
-                    symbol,
-                    quantity: qtyStr,
-                    price: priceStr,
-                });
-            } else if (side === 'buy') {
-                if (!hiveStr) throw new Error('Enter how much SWAP.HIVE to spend');
-                await marketAction('marketBuy', { symbol, quantity: hiveStr });
-            } else {
-                if (!qtyStr) throw new Error('Enter how much to sell');
-                await marketAction('marketSell', { symbol, quantity: qtyStr });
-            }
+            await run(async () => {
+                if (mode === 'limit') {
+                    if (!priceStr || !qtyStr) throw new Error('Enter a price and a quantity');
+                    await marketAction(side === 'buy' ? 'buy' : 'sell', {
+                        symbol,
+                        quantity: qtyStr,
+                        price: priceStr,
+                    });
+                } else if (side === 'buy') {
+                    if (!hiveStr) throw new Error('Enter how much SWAP.HIVE to spend');
+                    await marketAction('marketBuy', { symbol, quantity: hiveStr });
+                } else {
+                    if (!qtyStr) throw new Error('Enter how much to sell');
+                    await marketAction('marketSell', { symbol, quantity: qtyStr });
+                }
+            });
             toast.success('Order sent. It will show up after the next block.');
             setQuantity('');
             notifyWalletRefresh();
-            setTimeout(() => refresh(true), 4000);
+            setTimeout(() => refresh(true, true), 4000);
         } catch (err) {
             toast.error(err.message || 'Order failed');
         } finally {
@@ -306,9 +331,11 @@ export default function Trade() {
 
     const cancel = async (type, id) => {
         try {
-            await marketAction('cancel', { type, id });
+            await run(async () => {
+                await marketAction('cancel', { type, id });
+            });
             toast.success('Cancel sent');
-            setTimeout(() => refresh(true), 4000);
+            setTimeout(() => refresh(true, true), 4000);
         } catch (err) {
             toast.error(err.message || 'Cancel failed');
         }
@@ -334,9 +361,11 @@ export default function Trade() {
         );
     }
 
+    const txLocked = submitting || gate.inFlight || gate.waiting;
     let actionLabel = side === 'buy' ? `Buy ${symbol}` : `Sell ${symbol}`;
     if (!user) actionLabel = 'Connect wallet to trade';
-    else if (submitting) actionLabel = 'Confirm in Keychain...';
+    else if (gate.inFlight || submitting) actionLabel = 'Confirm in Keychain...';
+    else if (gate.waiting) actionLabel = 'Wait for the next block';
     else if (insufficient) actionLabel = `Insufficient ${spendSymbol}`;
 
     return (
@@ -396,9 +425,13 @@ export default function Trade() {
                             <span>Bid / Ask</span>
                             <strong>{fmtPrice(bestBid)} / {fmtPrice(bestAsk)}</strong>
                         </div>
+                        <div>
+                            <span>Pool</span>
+                            <strong>{poolPrice ? fmtPrice(poolPrice.toString()) : '—'}</strong>
+                        </div>
                     </div>
                     <div className="trade-links">
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => refresh(false)}>Refresh</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => refresh(false, true)}>Refresh</button>
                         {poolPair && (
                             <Link className="btn btn-ghost btn-sm" to={`/swap?from=SWAP.HIVE&to=${encodeURIComponent(symbol)}`}>
                                 Pool swap
@@ -410,6 +443,7 @@ export default function Trade() {
                 {error && <div className="card trade-error">{error}</div>}
 
                 <div className="trade-grid">
+                    <div className="trade-side-col">
                     <section className="card trade-form">
                         <div className="trade-side">
                             <button type="button" className={side === 'buy' ? 'buy active' : 'buy'} onClick={() => setSide('buy')}>Buy</button>
@@ -469,12 +503,26 @@ export default function Trade() {
                             type="button"
                             className={`btn btn-lg ${side === 'sell' ? 'btn-danger' : 'btn-primary'}`}
                             style={{ width: '100%', marginTop: 16 }}
-                            disabled={submitting || (user && (insufficient || precision == null))}
+                            disabled={txLocked || (user && (insufficient || precision == null))}
                             onClick={place}
                         >
                             {actionLabel}
                         </button>
                     </section>
+                    <TradeBot
+                        symbol={symbol}
+                        precision={precision}
+                        user={user}
+                        pool={pool}
+                        asks={asks}
+                        bids={bids}
+                        orders={orders}
+                        balances={balances}
+                        bestBid={bestBid}
+                        bestAsk={bestAsk}
+                        bot={bot}
+                    />
+                    </div>
 
                     <section className="card trade-book">
                         <h2 className="card-title">Order book</h2>
@@ -558,7 +606,7 @@ export default function Trade() {
                                             <td>{fmtQty(o.quantity, precision || 4)} {symbol}</td>
                                             <td>{o.tokensLocked ? `${fmtQty(o.tokensLocked, 4)} SWAP.HIVE` : '—'}</td>
                                             <td style={{ textAlign: 'right' }}>
-                                                <button type="button" className="btn btn-ghost btn-sm" onClick={() => cancel(o.type, o.txId)}>
+                                                <button type="button" className="btn btn-ghost btn-sm" disabled={gate.inFlight || gate.waiting} onClick={() => cancel(o.type, o.txId)}>
                                                     Cancel
                                                 </button>
                                             </td>

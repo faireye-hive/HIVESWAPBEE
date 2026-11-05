@@ -4,7 +4,7 @@ import TokenIcon from './TokenIcon.jsx';
 import TokenSelectModal from './TokenSelectModal.jsx';
 import { useKeychainContext } from '../context/KeychainContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
-import { findPool, getAccountBalances, getTokenInfo } from '../api/hiveEngine.js';
+import { findPool, getTokenInfo } from '../api/hiveEngine.js';
 import { notifyWalletRefresh } from '../hooks/useBalances.js';
 import { buildPoolIndex, buildSwap, findRoute, floorToPrecision } from '../lib/swapQuote.js';
 
@@ -21,13 +21,12 @@ function fmtDisplay(value) {
     }
 }
 
-export default function SwapForm({ pools, tokenMap, feeMul, fromToken, toToken, onTokensChange }) {
+export default function SwapForm({ pools, tokenMap, feeMul, balances = {}, fromToken, toToken, onTokensChange }) {
     const { user, swapTokens } = useKeychainContext();
     const toast = useToast();
 
     const [amount, setAmount] = useState('');
     const [slippage, setSlippage] = useState('1');
-    const [balances, setBalances] = useState({});
     const [extraPrecision, setExtraPrecision] = useState({});
     const [picking, setPicking] = useState(null);
     const [submitting, setSubmitting] = useState(false);
@@ -86,25 +85,6 @@ export default function SwapForm({ pools, tokenMap, feeMul, fromToken, toToken, 
         });
         return () => { cancelled = true; };
     }, [fromToken, toToken, route, tokenMap, extraPrecision]);
-
-    const loadBalances = useCallback(() => {
-        if (!user) {
-            setBalances({});
-            return;
-        }
-        getAccountBalances(user).then((rows) => {
-            const map = {};
-            for (const row of rows || []) map[row.symbol] = row.balance;
-            setBalances(map);
-        }).catch(() => {});
-    }, [user]);
-
-    useEffect(() => { loadBalances(); }, [loadBalances]);
-    useEffect(() => {
-        const onRefresh = () => loadBalances();
-        window.addEventListener('hiveswapbee:refresh', onRefresh);
-        return () => window.removeEventListener('hiveswapbee:refresh', onRefresh);
-    }, [loadBalances]);
 
     useEffect(() => { setConfirmImpact(false); }, [amount, fromToken, toToken, slippage]);
 
@@ -187,7 +167,7 @@ export default function SwapForm({ pools, tokenMap, feeMul, fromToken, toToken, 
             toast.success(`Swapped ${fresh.ops[0].tokenAmount} ${fromToken}`);
             setAmount('');
             notifyWalletRefresh();
-            setTimeout(loadBalances, 4000);
+            setTimeout(notifyWalletRefresh, 4000);
         } catch (err) {
             const message = err?.message || 'Swap failed';
             if (/cancel/i.test(message)) toast.error('Swap cancelled');

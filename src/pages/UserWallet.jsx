@@ -4,6 +4,7 @@ import { useKeychainContext } from '../context/KeychainContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { useWallet, smartDec } from '../hooks/useWallet.js';
 import TokenIcon from '../components/TokenIcon.jsx';
+import HivePegCard from '../components/HivePegCard.jsx';
 import Modal from '../components/Modal.jsx';
 import './UserWallet.css';
 
@@ -260,6 +261,12 @@ export default function UserWallet() {
                 {error && (
                     <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(255,107,107,0.3)' }}>
                         <p style={{ color: 'var(--red)' }}>⚠ {error}</p>
+                    </div>
+                )}
+
+                {isOwnWallet && (
+                    <div className="peg-wrap">
+                        <HivePegCard />
                     </div>
                 )}
 

@@ -1,11 +1,61 @@
-export const DEFAULT_HIVE_RPC = 'https://api.deathwing.me';
+import { cachedRead } from '../lib/readCache.js';
+
+export const HIVE_RPCS = [
+  'https://api.deathwing.me',
+  'https://api.hive.blog',
+  'https://api.openhive.network',
+  'https://hive-api.arcange.eu',
+  'https://rpc.ecency.com',
+];
+
+export const DEFAULT_HIVE_RPC = HIVE_RPCS[0];
+
+function normalizeRpc(url) {
+  return String(url || '').trim().replace(/\/+$/, '');
+}
 
 export function getHiveRpc() {
-  return localStorage.getItem('hiveswapbee_hive_rpc') || DEFAULT_HIVE_RPC;
+  return normalizeRpc(localStorage.getItem('hiveswapbee_hive_rpc')) || DEFAULT_HIVE_RPC;
 }
 
 export function setHiveRpc(url) {
-  localStorage.setItem('hiveswapbee_hive_rpc', url);
+  localStorage.setItem('hiveswapbee_hive_rpc', normalizeRpc(url) || DEFAULT_HIVE_RPC);
+}
+
+/** One cheap read. No retry. Used only by the manual node check. */
+export async function probeHiveRpc(url, timeoutMs = 5000, signal) {
+  const started = performance.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const onAbort = () => controller.abort();
+  signal?.addEventListener('abort', onAbort);
+  try {
+    const res = await fetch(normalizeRpc(url), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'condenser_api.get_dynamic_global_properties',
+        params: [],
+      }),
+      signal: controller.signal,
+    });
+    const ms = Math.round(performance.now() - started);
+    if (!res.ok) return { ok: false, ms, error: `HTTP ${res.status}` };
+    const json = await res.json();
+    if (json.error || json.result == null) return { ok: false, ms, error: 'bad response' };
+    return { ok: true, ms };
+  } catch (err) {
+    return {
+      ok: false,
+      ms: Math.round(performance.now() - started),
+      error: err.name === 'AbortError' ? 'timeout' : 'unreachable',
+    };
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', onAbort);
+  }
 }
 
 /**
@@ -35,9 +85,22 @@ export async function hiveCall(method, params = []) {
 
 /** Get mainnet HIVE balance for an account */
 export async function getHiveBalance(account) {
-  const result = await hiveCall('condenser_api.get_accounts', [[account]]);
+  const key = `hive:account:${normalizeRpc(getHiveRpc())}:${account}`;
+  const result = await cachedRead(key, 12000, () => hiveCall('condenser_api.get_accounts', [[account]]));
   if (!result || result.length === 0) return null;
   return result[0].balance; // e.g. "10.000 HIVE"
+}
+
+/** Head block, reused for a couple of seconds so the bot can wait a block without polling. */
+export async function getHeadBlock(fresh = false) {
+  const key = `hive:head:${normalizeRpc(getHiveRpc())}`;
+  const props = await cachedRead(
+    key,
+    2500,
+    () => hiveCall('condenser_api.get_dynamic_global_properties', []),
+    { fresh },
+  );
+  return Number(props?.head_block_number) || 0;
 }
 
 /** Get ranked posts from the bridge API for a tag (tribe) */

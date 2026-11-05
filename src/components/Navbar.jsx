@@ -1,9 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useKeychainContext } from '../context/KeychainContext.jsx';
 import { useBalances } from '../hooks/useBalances.js';
+import { getHiveEngineRpc, normalizeRpc, readRpcProbe } from '../api/hiveEngine.js';
 import RpcSettingsModal from './RpcSettingsModal.jsx';
 import './Navbar.css';
+
+function rpcDotClass(row) {
+    if (!row) return 'unknown';
+    if (!row.ok) return 'down';
+    if (row.ms >= 1500) return 'slow';
+    return 'ok';
+}
+
+function RpcButton({ onClick }) {
+    const [, setTick] = useState(0);
+    useEffect(() => {
+        const onStatus = () => setTick((n) => n + 1);
+        window.addEventListener('hiveswapbee:rpc-status', onStatus);
+        return () => window.removeEventListener('hiveswapbee:rpc-status', onStatus);
+    }, []);
+
+    const url = getHiveEngineRpc();
+    const row = readRpcProbe().he?.[normalizeRpc(url)];
+    let host = 'RPC';
+    try { host = new URL(url).host; } catch { /* keep the fallback label */ }
+
+    return (
+        <button className="btn btn-ghost btn-sm rpc-btn" onClick={onClick} title={`Hive-Engine node: ${host}. Click to switch.`}>
+            <span className={`rpc-dot ${rpcDotClass(row)}`} />
+            <span className="rpc-btn-label">{host}</span>
+        </button>
+    );
+}
 
 export default function Navbar() {
     const { user, loading, login, logout, isKeychainInstalled } = useKeychainContext();
@@ -84,9 +113,7 @@ export default function Navbar() {
                                     </span>
                                     <span className="user-name">@{user}</span>
                                 </Link>
-                                <button className="btn btn-ghost btn-sm" onClick={() => setShowRpcSettings(true)} title="RPC Settings">
-                                    ⚙️
-                                </button>
+                                <RpcButton onClick={() => setShowRpcSettings(true)} />
                                 <button className="btn btn-ghost btn-sm" onClick={logout}>
                                     Logout
                                 </button>
@@ -133,9 +160,7 @@ export default function Navbar() {
                         )}
 
                         {!user && (
-                            <button className="btn btn-ghost btn-sm rpc-btn" onClick={() => setShowRpcSettings(true)} title="RPC Settings">
-                                ⚙️
-                            </button>
+                            <RpcButton onClick={() => setShowRpcSettings(true)} />
                         )}
                     </div>
                 </div>
