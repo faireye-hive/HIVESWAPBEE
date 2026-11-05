@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="HiveSwapBee — A premium DEX for Hive-Engine liquidity pools. Swap tokens, provide liquidity, and earn rewards." />
     <title>HiveSwapBee — Hive-Engine DEX</title>
+    <!-- Restores the real path after the GitHub Pages 404.html redirect. Harmless locally. -->
+    <script>
+      (function (location) {
+        if (location.search[1] === '/') {
+          var decoded = location.search.slice(1).split('&').map(function (part) {
+            return part.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(null, '', location.pathname.slice(0, -1) + decoded + location.hash);
+        }
+      }(window.location));
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
