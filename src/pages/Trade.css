@@ -1,0 +1,238 @@
+.trade-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.trade-top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.trade-symbol {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.trade-symbol-search {
+    position: relative;
+}
+
+.trade-symbol-search .input {
+    width: 160px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.trade-suggest {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    width: 240px;
+    background: var(--bg-modal);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-modal);
+    overflow: hidden;
+}
+
+.trade-suggest button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.trade-suggest button:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.trade-suggest small {
+    margin-left: auto;
+    color: var(--text-secondary);
+}
+
+.trade-stats {
+    display: flex;
+    gap: 22px;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.trade-stats span {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.trade-stats strong {
+    font-size: 0.95rem;
+}
+
+.trade-links {
+    display: flex;
+    gap: 8px;
+}
+
+.trade-error {
+    color: var(--red);
+}
+
+.trade-grid {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr) 280px;
+    gap: 16px;
+    align-items: start;
+}
+
+.trade-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.trade-side button {
+    padding: 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.trade-side button.buy.active {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: rgba(0, 214, 143, 0.35);
+}
+
+.trade-side button.sell.active {
+    background: var(--red-bg);
+    color: var(--red);
+    border-color: rgba(255, 107, 107, 0.35);
+}
+
+.trade-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.trade-field span {
+    display: flex;
+    justify-content: space-between;
+}
+
+.trade-field em {
+    font-style: normal;
+    color: var(--text-muted);
+}
+
+.ob-head, .ob-row, .tape-row {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.ob-head {
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 4px;
+}
+
+.ob-row {
+    position: relative;
+    width: 100%;
+    padding: 5px 4px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.ob-row span, .tape-row span {
+    position: relative;
+    z-index: 1;
+}
+
+.ob-row::before {
+    content: '';
+    position: absolute;
+    inset: 1px 0;
+    width: var(--depth);
+    border-radius: 4px;
+}
+
+.ob-row.ask::before {
+    right: 0;
+    left: auto;
+    background: rgba(255, 107, 107, 0.16);
+}
+
+.ob-row.bid::before {
+    left: 0;
+    background: rgba(0, 214, 143, 0.16);
+}
+
+.ob-row.ask span:first-child { color: var(--red); }
+.ob-row.bid span:first-child { color: var(--green); }
+
+.ob-spread {
+    text-align: center;
+    padding: 8px;
+    margin: 4px 0;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.tape-row {
+    padding: 4px;
+}
+
+.tape-row.buy span:first-child { color: var(--green); }
+.tape-row.sell span:first-child { color: var(--red); }
+
+.trade-book, .trade-tape {
+    min-height: 420px;
+}
+
+@media (max-width: 1100px) {
+    .trade-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .trade-form {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 720px) {
+    .trade-grid {
+        grid-template-columns: 1fr;
+    }
+}

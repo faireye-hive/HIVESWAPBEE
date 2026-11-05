@@ -29,6 +29,7 @@ export default function Navbar() {
     const navLinks = [
         { path: '/', label: 'Pools', icon: '◈' },
         { path: '/swap', label: 'Swap', icon: '⇄' },
+        { path: '/trade/BEE', label: 'Trade', icon: '📈', match: '/trade' },
         { path: '/wallet', label: 'Wallet', icon: '💼' },
         { path: '/tokens', label: 'Tokens', icon: '🪙' },
         { path: '/tribes', label: 'Tribes', icon: '🔥' },
@@ -52,7 +53,10 @@ export default function Navbar() {
                             <Link
                                 key={link.path}
                                 to={link.path}
-                                className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
+                                className={`nav-link ${
+                                    (link.match ? location.pathname.startsWith(link.match) : location.pathname === link.path)
+                                        ? 'active' : ''
+                                }`}
                             >
                                 <span className="nav-icon">{link.icon}</span>
                                 {link.label}

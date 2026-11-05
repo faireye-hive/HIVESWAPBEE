@@ -58,9 +58,13 @@ function saveFilter(f) { localStorage.setItem(PREF_FILTER_KEY, JSON.stringify(f)
 // ── Keychain helper ───────────────────────────────────────────────────────
 
 function keychainJson(user, payload, label) {
+    const body = {
+        ...payload,
+        contractPayload: { ...payload.contractPayload, isSignedWithActiveKey: true },
+    };
     return new Promise((resolve) => {
         window.hive_keychain.requestCustomJson(user, 'ssc-mainnet-hive', 'Active',
-            JSON.stringify(payload), label, (r) => resolve(r));
+            JSON.stringify(body), label, (r) => resolve(r));
     });
 }
 
@@ -427,10 +431,15 @@ export default function UserWallet() {
                                             {isOwnWallet && (
                                                 <td className="uw-col-actions">
                                                     <div className="uw-actions">
-                                                        {token.hasPool && (
+                                                        {token.symbol !== 'SWAP.HIVE' && (
                                                             <button className="uw-action-btn uw-action-trade"
                                                                 title={`Trade ${token.symbol}`}
-                                                                onClick={() => navigate(`/swap?pair=${encodeURIComponent(token.poolPairs[0])}`)}>⇄</button>
+                                                                onClick={() => navigate(`/trade/${encodeURIComponent(token.symbol)}`)}>⇄</button>
+                                                        )}
+                                                        {token.hasPool && (
+                                                            <button className="uw-action-btn uw-action-trade"
+                                                                title={`Swap ${token.symbol}`}
+                                                                onClick={() => navigate(`/swap?from=SWAP.HIVE&to=${encodeURIComponent(token.symbol)}`)}>◈</button>
                                                         )}
                                                         {token.stakingEnabled && token.liquid > 0 && (
                                                             <button className="uw-action-btn uw-action-stake"

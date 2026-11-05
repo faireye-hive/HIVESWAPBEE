@@ -2,17 +2,65 @@
     animation: fadeIn 0.4s ease-out;
 }
 
-.search-container {
+.tokens-header {
     display: flex;
-    justify-content: flex-end;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
-@media (max-width: 600px) {
-    .search-container {
+.tokens-header .input {
+    width: 260px;
+}
+
+.token-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.token-cell strong {
+    display: block;
+    font-weight: 700;
+}
+
+.token-cell small {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.token-row {
+    cursor: pointer;
+}
+
+.number {
+    font-variant-numeric: tabular-nums;
+}
+
+.chg-up { color: var(--green); font-weight: 600; }
+.chg-down { color: var(--red); font-weight: 600; }
+
+.token-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.token-pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 14px 16px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 720px) {
+    .tokens-header .input {
         width: 100%;
-        margin-top: 1rem;
-    }
-    .search-container .input {
-        width: 100% !important;
     }
 }

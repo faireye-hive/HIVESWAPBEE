@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { findPools, findPool, findLiquidityPositions, findUserPositions, getTokenInfoBatch, findDistributionBatches } from '../api/hiveEngine';
+import { findPools, findPool, findLiquidityPositions, findUserPositions, getTokenInfoChunked, findDistributionBatches } from '../api/hiveEngine';
 
 const TRIBALDEX_API = 'https://info-api.tribaldex.com/pools';
 
@@ -172,7 +172,7 @@ export function usePools() {
                 const [b, q] = pool.tokenPair.split(':');
                 symbols.add(b); symbols.add(q);
             }
-            const tokensArr = await getTokenInfoBatch([...symbols]);
+            const tokensArr = await getTokenInfoChunked([...symbols]);
             const tMap = {};
             if (tokensArr) for (const t of tokensArr) tMap[t.symbol] = t;
             setTokenMap(tMap);

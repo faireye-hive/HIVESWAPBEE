@@ -231,7 +231,12 @@ export function useWallet(account) {
         }
     }, [account]);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        load();
+        const onRefresh = () => load(true);
+        window.addEventListener('hiveswapbee:refresh', onRefresh);
+        return () => window.removeEventListener('hiveswapbee:refresh', onRefresh);
+    }, [load]);
     const refetch = useCallback(() => load(true), [load]);
     return { data, loading, error, lastUpdated, refetch };
 }

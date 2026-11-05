@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { getHiveBalance } from '../api/hive';
 import { getTokenBalance } from '../api/hiveEngine';
 
+export function notifyWalletRefresh() {
+    window.dispatchEvent(new Event('hiveswapbee:refresh'));
+}
+
 export function useBalances(account) {
     const [hiveBalance, setHiveBalance] = useState('0.000 HIVE');
     const [swapHiveBalance, setSwapHiveBalance] = useState('0.00000000');
@@ -40,6 +44,9 @@ export function useBalances(account) {
 
     useEffect(() => {
         fetchBalances();
+        const onRefresh = () => fetchBalances();
+        window.addEventListener('hiveswapbee:refresh', onRefresh);
+        return () => window.removeEventListener('hiveswapbee:refresh', onRefresh);
     }, [fetchBalances]);
 
     return { hiveBalance, swapHiveBalance, loading, error, refetch: fetchBalances };

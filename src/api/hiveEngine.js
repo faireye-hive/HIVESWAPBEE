@@ -131,6 +131,12 @@ export async function getPoolCount() {
 export async function findMetrics(limit = 1000, offset = 0) {
     return sscCall('find', { contract: 'market', table: 'metrics', query: {}, limit, offset });
 }
+export async function getMarketMetric(symbol) {
+    const rows = await sscCall('find', {
+        contract: 'market', table: 'metrics', query: { symbol }, limit: 1, offset: 0,
+    });
+    return rows?.[0] || null;
+}
 /* ── Market metrics (price change) ── */
 // Returns all market metric rows with priceChangePercent, lastPrice, etc.
 export async function getMarketMetrics(limit = 1000, offset = 0) {
@@ -152,4 +158,78 @@ export async function getAllTokensMeta(limit = 1000, offset = 0) {
         limit,
         offset,
     });
+}
+
+/** Walk a table until a short page comes back. Hive-Engine caps a find at 1000 rows. */
+export async function findAllPages(contract, table, query = {}, maxPages = 4) {
+    const pageSize = 1000;
+    const all = [];
+    for (let page = 0; page < maxPages; page += 1) {
+        const batch = await sscCall('find', {
+            contract,
+            table,
+            query,
+            limit: pageSize,
+            offset: page * pageSize,
+        });
+        if (!Array.isArray(batch) || batch.length === 0) break;
+        all.push(...batch);
+        if (batch.length < pageSize) break;
+    }
+    return all;
+}
+
+/** Token metadata in small batches. A single huge `$in` query gets rejected. */
+export async function getTokenInfoChunked(symbols) {
+    const unique = [...new Set((symbols || []).filter(Boolean))];
+    const size = 80;
+    const chunks = [];
+    for (let i = 0; i < unique.length; i += size) chunks.push(unique.slice(i, i + size));
+    const parts = await Promise.all(chunks.map((c) => getTokenInfoBatch(c).catch(() => [])));
+    return parts.flat().filter(Boolean);
+}
+
+export async function getSellBook(symbol, limit = 50) {
+    return sscCall('find', {
+        contract: 'market',
+        table: 'sellBook',
+        query: { symbol },
+        limit,
+        offset: 0,
+        indexes: [{ index: 'priceDec', descending: false }],
+    });
+}
+
+export async function getBuyBook(symbol, limit = 50) {
+    return sscCall('find', {
+        contract: 'market',
+        table: 'buyBook',
+        query: { symbol },
+        limit,
+        offset: 0,
+        indexes: [{ index: 'priceDec', descending: true }],
+    });
+}
+
+export async function getTradesHistory(symbol, limit = 40) {
+    const rows = await sscCall('find', {
+        contract: 'market',
+        table: 'tradesHistory',
+        query: { symbol },
+        limit,
+        offset: 0,
+    });
+    return (rows || []).slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+
+export async function getAccountOrders(account, symbol) {
+    const [buys, sells] = await Promise.all([
+        sscCall('find', {
+            contract: 'market', table: 'buyBook', query: { account, symbol }, limit: 100, offset: 0,
+        }).catch(() => []),
+        sscCall('find', {
+            contract: 'market', table: 'sellBook', query: { account, symbol }, limit: 100, offset: 0,
+        }).catch(() => []),
+    ]);
+    return { buys: buys || [], sells: sells || [] };
 }
