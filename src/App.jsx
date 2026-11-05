@@ -14,9 +14,13 @@ import Tribes from './pages/Tribes.jsx';
 import TribePosts from './pages/TribePosts.jsx';
 import UserWallet from './pages/UserWallet.jsx';
 
+// Vite's BASE_URL is `/` locally and `/HIVESWAPBEE/` on GitHub Pages.
+// React Router wants no trailing slash.
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
+
 export default function App() {
     return (
-        <BrowserRouter>
+        <BrowserRouter basename={routerBasename}>
             <KeychainProvider>
                 <ToastProvider>
                     <Navbar />
