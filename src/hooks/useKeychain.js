@@ -83,10 +83,14 @@ export function useKeychain() {
                 return;
             }
 
+            // Active-key sidechain ops are rejected unless this flag is set.
             const json = JSON.stringify({
                 contractName,
                 contractAction,
-                contractPayload,
+                contractPayload: {
+                    ...contractPayload,
+                    isSignedWithActiveKey: true,
+                },
             });
 
             window.hive_keychain.requestCustomJson(
@@ -106,15 +110,49 @@ export function useKeychain() {
         });
     }, [user, isKeychainInstalled]);
 
+    /** Several Hive-Engine ops in one Hive transaction (multi-hop swaps). */
+    const broadcastOperations = useCallback((operations) => {
+        return new Promise((resolve, reject) => {
+            if (!isKeychainInstalled() || typeof window.hive_keychain.requestBroadcast !== 'function') {
+                reject(new Error('Hive Keychain is not installed'));
+                return;
+            }
+            if (!user) {
+                reject(new Error('Please login first'));
+                return;
+            }
+            window.hive_keychain.requestBroadcast(
+                user,
+                operations,
+                'Active',
+                (response) => {
+                    if (response.success) resolve(response);
+                    else reject(new Error(response.message || 'Broadcast failed'));
+                }
+            );
+        });
+    }, [user, isKeychainInstalled]);
+
     /* ---- Convenience methods ---- */
 
-    /** Swap tokens */
-    const swapTokens = useCallback((payload) => {
-        return broadcastCustomJson('marketpools', 'swapTokens', {
-            ...payload,
-            isSignedWithActiveKey: true,
-        });
-    }, [broadcastCustomJson]);
+    /** One pool swap, or several hops in a single transaction. */
+    const swapTokens = useCallback((payloadOrList) => {
+        const steps = Array.isArray(payloadOrList) ? payloadOrList : [payloadOrList];
+        if (steps.length === 1) {
+            return broadcastCustomJson('marketpools', 'swapTokens', steps[0]);
+        }
+        const operations = steps.map((payload) => ['custom_json', {
+            required_auths: [user],
+            required_posting_auths: [],
+            id: 'ssc-mainnet-hive',
+            json: JSON.stringify({
+                contractName: 'marketpools',
+                contractAction: 'swapTokens',
+                contractPayload: { ...payload, isSignedWithActiveKey: true },
+            }),
+        }]);
+        return broadcastOperations(operations);
+    }, [broadcastCustomJson, broadcastOperations, user]);
 
     /** Add liquidity to a pool */
     const addLiquidity = useCallback((payload) => {
@@ -132,6 +170,44 @@ export function useKeychain() {
         });
     }, [broadcastCustomJson]);
 
+    /** Limit or market order on the Hive-Engine order book. */
+    const marketAction = useCallback((action, payload) => {
+        return broadcastCustomJson('market', action, payload);
+    }, [broadcastCustomJson]);
+
+    /**
+     * Turn HIVE into SWAP.HIVE. The sidechain credits the sender when HIVE
+     * arrives at @honey-swap. Deposit fee is 1% (minimum 0.001 HIVE).
+     */
+    const depositHive = useCallback((amount) => {
+        return new Promise((resolve, reject) => {
+            if (!isKeychainInstalled()) {
+                reject(new Error('Hive Keychain is not installed'));
+                return;
+            }
+            if (!user) {
+                reject(new Error('Please login first'));
+                return;
+            }
+            window.hive_keychain.requestTransfer(
+                user,
+                'honey-swap',
+                amount,
+                '',
+                'HIVE',
+                (response) => {
+                    if (response.success) resolve(response);
+                    else reject(new Error(response.message || 'Deposit failed'));
+                }
+            );
+        });
+    }, [user, isKeychainInstalled]);
+
+    /** Turn SWAP.HIVE back into HIVE. Quantity must have at most 3 decimals. */
+    const withdrawHive = useCallback((quantity) => {
+        return broadcastCustomJson('hivepegged', 'withdraw', { quantity });
+    }, [broadcastCustomJson]);
+
     return {
         user,
         loading,
@@ -140,8 +216,12 @@ export function useKeychain() {
         login,
         logout,
         broadcastCustomJson,
+        broadcastOperations,
         swapTokens,
         addLiquidity,
         removeLiquidity,
+        marketAction,
+        depositHive,
+        withdrawHive,
     };
 }
